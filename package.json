@@ -1,0 +1,28 @@
+{
+  "name": "ws_client",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.alibaba-inc.com:hgame/catcher.git"
+  },
+  "author": "harry.gyf <harry.gyf@alibaba-inc.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "npm run serve",
+    "build": "npm run build-ts",
+    "serve": "node dist/index.js",
+    "build-ts": "tsc -d"
+  },
+  "devDependencies": {
+    "@types/express": "4.11.1",
+    "@types/ws": "4.0.2",
+    "tslint": "5.9.1",
+    "typescript": "2.8.1"
+  },
+  "dependencies": {
+    "@types/node": "^10.12.1",
+    "express": "4.16.3",
+    "ws": "^5.0.0"
+  }
+}
