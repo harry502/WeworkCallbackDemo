@@ -1,33 +1,60 @@
 
 let express = require("express");
-let bodyParser = require('body-parser');
+var xmlparser = require('express-xml-bodyparser');
+// let bodyParser = require('body-parser');
+import { js2xml, xml2js } from "xml-js";
+import { getSignature, decrypt, encrypt } from '@wecom/crypto';
+import { randomInt } from "crypto";
 let app = express();
-app.use(bodyParser.json());
+app.use(xmlparser());
 
-app.post('/api/get_game_backend_info', (req, res) => {
-    console.log(req.body.player_id);
-    let info = {
-            "角色能力(array)": ["瞬间移动","矢量控制","预测未来","再生能力","意念控制"],
-            "角色评级": 6,
-            "角色评价": "你咋不上天",
-            "角色小弟":
-            [
-                {
-                "小弟名称": "小弟1号",
-                "小弟能力": ["喊666","背后捅刀","乘乱逃命"]
-                },
-                {
-                "小弟名称": "小弟2号",
-                "小弟能力": ["喊666","虚张声势","乘乱逃命"]
-                }
-            ],
-            "角色详情": {
-                "战斗力": "无法估量",
-                "等级": 999,
-                "武器": "左手和右手",
-                "座右铭": "没有我带不动的小弟"
-            }
-            };
-    res.send(info);
+const token = "";
+const encodingAESKey = "";
+
+app.get('/wework/callback', (req, res) => {
+    console.log(req.query);
+    var params:object = req.query;
+    const signature = getSignature(token, params["timestamp"], params["nonce"], params["echostr"]);
+
+    res.send(signature);
 });
+
+app.post('/wework/callback', (req, res) => {
+    console.log(req.data);
+    const {message, id} = decrypt(encodingAESKey, req.data["Encrypt"]);
+
+    let obj: object = xml2js(message);
+
+    console.log(obj);
+
+    let resp: any = {
+        "ToUserName": "",
+        "FromUserName": "fromUser",
+        "CreateTime": 1357290913,
+        "MsgType": "update_taskcard",
+        "TaskCard": {
+            "ReplaceName": "replace_name"
+        }
+    }
+
+    let xmlData = js2xml(resp);
+
+    const ciphered = encrypt(encodingAESKey, xmlData, id);
+
+    let timestamp = Date.now();
+
+    let nonce = randomInt(1000000);
+
+    const signature = getSignature(token, timestamp, nonce, ciphered);
+
+    resp = {
+        TimeStamp: timestamp,
+        Nonce: nonce,
+        MsgSignature: signature,
+        Encrypt: ciphered
+    }
+    
+    res.send(resp);
+});
+
 app.listen(3000);
